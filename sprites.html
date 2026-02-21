@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>角色素材產生器</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { background: #1a1a2e; color: #eee; font-family: sans-serif; display: flex; flex-direction: column; align-items: center; }
+h1 { margin: 16px 0 6px; color: #e8c840; font-size: 22px; }
+p { color: #888; font-size: 13px; margin-bottom: 10px; }
+canvas { border: 2px solid #333; border-radius: 8px; }
+.controls { margin: 12px 0; display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
+.controls button { padding: 8px 18px; border: none; border-radius: 6px; cursor: pointer; font-size: 14px; font-weight: bold; }
+.btn-red { background: #cc3333; color: #fff; }
+.btn-blue { background: #3355cc; color: #fff; }
+.btn-brown { background: #886622; color: #fff; }
+.btn-green { background: #22aa44; color: #fff; }
+.btn-gray { background: #555; color: #fff; }
+</style>
+</head>
+<body>
+<h1>角鬥士競技場 - 角色素材</h1>
+<p>撳下面按鈕切換動作</p>
+<canvas id="c" width="800" height="480"></canvas>
+<div class="controls">
+  <button class="btn-gray" onclick="anim='idle'">待機</button>
+  <button class="btn-green" onclick="anim='walk'">行走</button>
+  <button class="btn-red" onclick="anim='attack'">攻擊</button>
+  <button class="btn-blue" onclick="anim='defend'">防禦</button>
+  <button class="btn-brown" onclick="exportPNG()">匯出 PNG</button>
+</div>
+<script>
+var C = document.getElementById('c');
+var ctx = C.getContext('2d');
+var anim = 'idle';
+
+function exportPNG() {
+  var a = document.createElement('a');
+  a.download = 'gladiator_sprites.png';
+  a.href = C.toDataURL('image/png');
+  a.click();
+}
+
+// ============ HELPERS ============
+function olCircle(x, y, r, fill, ol) {
+  ctx.fillStyle = '#1a1008';
+  ctx.beginPath(); ctx.arc(x, y, r + ol * 0.5, 0, Math.PI * 2); ctx.fill();
+  ctx.fillStyle = fill;
+  ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fill();
+}
+function olLine(x1, y1, x2, y2, w, color, ol) {
+  ctx.lineCap = 'round';
+  ctx.strokeStyle = '#1a1008'; ctx.lineWidth = w + ol * 2;
+  ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke();
+  ctx.strokeStyle = color; ctx.lineWidth = w;
+  ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke();
+}
+function olShape(fn, fill, ol) {
+  ctx.strokeStyle = '#1a1008'; ctx.lineWidth = ol * 2; fn(); ctx.stroke();
+  ctx.fillStyle = fill; fn(); ctx.fill();
+}
+
+// ============ GLADIATOR ============
+function drawGladiator(cx, cy, size, t) {
+  var s = size / 80;
+  var OL = 2.5 * s;
+  var atkSwing = (anim === 'attack') ? Math.sin(t / 120 * Math.PI) * 0.8 : 0;
+  var lKick = (anim === 'walk') ? Math.sin(t / 150) * 8 * s : 0;
+  var capeW = Math.sin(t / 280) * 5 * s;
+  var bob = Math.sin(t / 300) * 3;
+
+  ctx.save();
+  ctx.translate(cx, cy + bob);
+
+  // LEGS
+  olLine(-14*s, 10*s, -14*s-lKick, 38*s, 6*s, '#d4a060', OL);
+  olCircle(-14*s-lKick, 40*s, 5*s, '#8B5520', OL);
+  ctx.strokeStyle='#a09070'; ctx.lineWidth=3*s;
+  ctx.beginPath(); ctx.moveTo(-14*s-lKick*0.3,20*s); ctx.lineTo(-14*s-lKick*0.7,32*s); ctx.stroke();
+  olLine(14*s, 10*s, 14*s+lKick, 38*s, 6*s, '#d4a060', OL);
+  olCircle(14*s+lKick, 40*s, 5*s, '#8B5520', OL);
+  ctx.strokeStyle='#a09070'; ctx.lineWidth=3*s;
+  ctx.beginPath(); ctx.moveTo(14*s+lKick*0.3,20*s); ctx.lineTo(14*s+lKick*0.7,32*s); ctx.stroke();
+
+  // CAPE
+  ctx.fillStyle='#1a0808';
+  ctx.beginPath(); ctx.moveTo(-18*s,-5*s); ctx.quadraticCurveTo(0,30*s+capeW,18*s,-5*s); ctx.fill();
+  ctx.fillStyle='#881818';
+  ctx.beginPath(); ctx.moveTo(-15*s,-3*s); ctx.quadraticCurveTo(0,26*s+capeW,15*s,-3*s); ctx.fill();
+
+  // TUNIC (red skirt)
+  olShape(function(){ctx.beginPath();ctx.moveTo(-16*s,0);ctx.lineTo(-20*s,16*s);ctx.lineTo(20*s,16*s);ctx.lineTo(16*s,0);ctx.closePath();},'#cc3333',OL);
+  // Pteruges
+  ctx.fillStyle='#aa7744';
+  for(var i=-2;i<=2;i++){ctx.fillRect(i*7*s-2.5*s,11*s,5*s,8*s);ctx.strokeStyle='#1a1008';ctx.lineWidth=1*s;ctx.strokeRect(i*7*s-2.5*s,11*s,5*s,8*s);}
+
+  // CHEST ARMOR
+  olShape(function(){ctx.beginPath();ctx.moveTo(-18*s,-10*s);ctx.quadraticCurveTo(-20*s,5*s,-15*s,10*s);ctx.lineTo(15*s,10*s);ctx.quadraticCurveTo(20*s,5*s,18*s,-10*s);ctx.closePath();},'#b0a088',OL);
+  ctx.fillStyle='#ccc0a8';ctx.beginPath();ctx.ellipse(0,-2*s,10*s,8*s,0,0,Math.PI*2);ctx.fill();
+  ctx.strokeStyle='#8a7a60';ctx.lineWidth=1.5*s;
+  for(var ab=-1;ab<=1;ab++){ctx.beginPath();ctx.moveTo(-14*s,ab*5*s);ctx.lineTo(14*s,ab*5*s);ctx.stroke();}
+  // Belt
+  ctx.strokeStyle='#1a1008';ctx.lineWidth=4*s;ctx.beginPath();ctx.moveTo(-17*s,8*s);ctx.lineTo(17*s,8*s);ctx.stroke();
+  ctx.strokeStyle='#8B5520';ctx.lineWidth=3*s;ctx.beginPath();ctx.moveTo(-16*s,8*s);ctx.lineTo(16*s,8*s);ctx.stroke();
+  olCircle(0,8*s,3*s,'#e8c840',1.5*s);
+
+  // SHOULDER PADS
+  olCircle(-20*s,-8*s,8*s,'#a09078',OL);
+  olCircle(20*s,-8*s,8*s,'#a09078',OL);
+  ctx.fillStyle='#e8c840';ctx.beginPath();ctx.arc(-20*s,-8*s,2.5*s,0,Math.PI*2);ctx.fill();
+  ctx.beginPath();ctx.arc(20*s,-8*s,2.5*s,0,Math.PI*2);ctx.fill();
+
+  // LEFT ARM + WEAPON
+  var armSw = (anim==='attack') ? Math.sin(t/100)*20*s : 0;
+  olLine(-20*s,-5*s,-28*s-armSw,8*s,5*s,'#d4a060',OL);
+  olCircle(-28*s-armSw,10*s,5*s,'#d4a060',OL);
+
+  // SWORD
+  ctx.save();ctx.translate(-28*s-armSw,8*s);ctx.rotate(-0.8+atkSwing);
+  ctx.strokeStyle='rgba(200,220,255,0.3)';ctx.lineWidth=8*s;ctx.lineCap='round';
+  ctx.beginPath();ctx.moveTo(0,0);ctx.lineTo(0,-40*s);ctx.stroke();
+  olLine(0,2*s,0,-38*s,5*s,'#e8e8f0',OL);
+  ctx.strokeStyle='#fff';ctx.lineWidth=1.5*s;ctx.beginPath();ctx.moveTo(0,-5*s);ctx.lineTo(0,-35*s);ctx.stroke();
+  ctx.fillStyle='#fff';ctx.beginPath();ctx.moveTo(-2.5*s,-35*s);ctx.lineTo(0,-42*s);ctx.lineTo(2.5*s,-35*s);ctx.closePath();ctx.fill();
+  olLine(-8*s,2*s,8*s,2*s,4*s,'#d4a030',OL);
+  olLine(0,2*s,0,12*s,4*s,'#6B3513',OL);
+  olCircle(0,13*s,3.5*s,'#d4a030',OL);
+  ctx.restore();
+
+  // RIGHT ARM
+  if(anim==='defend'){
+    olLine(20*s,-5*s,30*s,-5*s,5*s,'#d4a060',OL);
+    olShape(function(){ctx.beginPath();ctx.moveTo(30*s,-18*s);ctx.quadraticCurveTo(44*s,-15*s,44*s,0);ctx.quadraticCurveTo(44*s,15*s,30*s,18*s);ctx.quadraticCurveTo(28*s,0,30*s,-18*s);ctx.closePath();},'#cc9922',OL);
+    ctx.fillStyle='#aa2222';ctx.beginPath();ctx.arc(36*s,0,6*s,0,Math.PI*2);ctx.fill();
+    ctx.strokeStyle='#e8c840';ctx.lineWidth=1.5*s;ctx.stroke();
+  } else {
+    olLine(20*s,-5*s,26*s,10*s,5*s,'#d4a060',OL);
+    olCircle(26*s,12*s,5*s,'#d4a060',OL);
+  }
+
+  // HEAD
+  var headS=30*s, headY=-28*s+(anim==='walk'?Math.sin(t/150)*2*s:0);
+  olLine(0,-10*s,0,headY+headS*0.5,8*s,'#dbb880',OL);
+  olCircle(0,headY,headS,'#f0c888',OL);
+  ctx.fillStyle='rgba(180,120,60,0.12)';ctx.beginPath();ctx.ellipse(0,headY+headS*0.2,headS*0.6,headS*0.4,0,0,Math.PI*2);ctx.fill();
+
+  // FACE
+  ctx.strokeStyle='#2a1a0a';ctx.lineWidth=3.5*s;ctx.lineCap='round';
+  ctx.beginPath();ctx.moveTo(-12*s,headY-8*s);ctx.lineTo(-5*s,headY-4*s);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(12*s,headY-8*s);ctx.lineTo(5*s,headY-4*s);ctx.stroke();
+  // Eyes
+  ctx.fillStyle='#fff';ctx.strokeStyle='#1a1008';ctx.lineWidth=1.5*s;
+  ctx.beginPath();ctx.ellipse(-8*s,headY-2*s,5*s,4*s,0,0,Math.PI*2);ctx.fill();ctx.stroke();
+  ctx.fillStyle='#2a1808';ctx.beginPath();ctx.arc(-7*s,headY-2*s,2.5*s,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(-9*s,headY-4*s,1*s,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle='#fff';ctx.strokeStyle='#1a1008';ctx.lineWidth=1.5*s;
+  ctx.beginPath();ctx.ellipse(8*s,headY-2*s,5*s,4*s,0,0,Math.PI*2);ctx.fill();ctx.stroke();
+  ctx.fillStyle='#2a1808';ctx.beginPath();ctx.arc(9*s,headY-2*s,2.5*s,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(7*s,headY-4*s,1*s,0,Math.PI*2);ctx.fill();
+  // Nose
+  ctx.fillStyle='#d4a870';ctx.beginPath();ctx.ellipse(0,headY+4*s,3*s,2*s,0,0,Math.PI*2);ctx.fill();
+  // Mouth
+  ctx.strokeStyle='#5a3020';ctx.lineWidth=2*s;ctx.beginPath();ctx.arc(0,headY+12*s,6*s,Math.PI+0.5,-0.5);ctx.stroke();
+  // Beard
+  olShape(function(){ctx.beginPath();ctx.ellipse(0,headY+16*s,10*s,6*s,0,0,Math.PI);},'#8a6a40',OL);
+
+  // HELMET
+  ctx.fillStyle='#1a1008';ctx.beginPath();ctx.arc(0,headY,headS+OL,Math.PI,0);ctx.fill();
+  ctx.fillStyle='#a09888';ctx.beginPath();ctx.arc(0,headY,headS-1*s,Math.PI+0.1,-0.1);ctx.fill();
+  ctx.fillStyle='#c8c0b0';ctx.beginPath();ctx.arc(-5*s,headY-8*s,headS*0.4,0,Math.PI*2);ctx.fill();
+  ctx.strokeStyle='#706050';ctx.lineWidth=3*s;ctx.beginPath();ctx.arc(0,headY,headS+1*s,Math.PI-0.1,0.1);ctx.stroke();
+  // Cheek guards
+  ctx.fillStyle='#1a1008';ctx.fillRect(-headS-2*s,headY-2*s,8*s,16*s);ctx.fillRect(headS-6*s,headY-2*s,8*s,16*s);
+  ctx.fillStyle='#908878';ctx.fillRect(-headS,headY,5*s,12*s);ctx.fillRect(headS-5*s,headY,5*s,12*s);
+
+  // PLUME
+  var pH=22*s,pW=8*s;
+  ctx.fillStyle='#1a1008';ctx.beginPath();ctx.ellipse(0,headY-headS-pH*0.3,pW+OL,pH*0.6,0,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle='#cc2222';ctx.beginPath();ctx.ellipse(0,headY-headS-pH*0.3,pW,pH*0.55,0,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle='#ee5544';ctx.beginPath();ctx.ellipse(-2*s,headY-headS-pH*0.4,pW*0.5,pH*0.3,0,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle='#1a1008';ctx.fillRect(-4*s,headY-headS-2*s,8*s,6*s);
+  ctx.fillStyle='#d4a030';ctx.fillRect(-3*s,headY-headS,6*s,4*s);
+
+  // Defense aura
+  if(anim==='defend'){ctx.strokeStyle='rgba(255,220,0,0.6)';ctx.lineWidth=4*s;ctx.beginPath();ctx.arc(0,5*s,50*s,0,Math.PI*2);ctx.stroke();}
+
+  ctx.restore();
+}
+
+// ============ BEAST ============
+function drawBeast(cx, cy, size, t) {
+  var s = size / 90;
+  var OL = 2.5 * s;
+  var atkSw = (anim==='attack') ? Math.sin(t/100*Math.PI) : 0;
+  var lKick = (anim==='walk') ? Math.sin(t/140)*6*s : 0;
+  var bob = Math.sin(t/350)*4;
+  var breathe = 1+Math.sin(t/500)*0.02;
+
+  ctx.save();
+  ctx.translate(cx, cy+bob);
+
+  // TAIL
+  var tw=Math.sin(t/220)*12*s;
+  ctx.strokeStyle='#1a1008';ctx.lineWidth=7*s;ctx.lineCap='round';
+  ctx.beginPath();ctx.moveTo(0,20*s);ctx.quadraticCurveTo(-10*s,35*s+tw,-5*s,48*s+tw*0.5);ctx.stroke();
+  ctx.strokeStyle='#6a5545';ctx.lineWidth=4.5*s;
+  ctx.beginPath();ctx.moveTo(0,20*s);ctx.quadraticCurveTo(-10*s,35*s+tw,-5*s,48*s+tw*0.5);ctx.stroke();
+
+  // HIND LEGS
+  olLine(-15*s,18*s,-20*s-lKick,42*s,8*s,'#7a6050',OL);
+  olCircle(-20*s-lKick,44*s,5*s,'#5a4030',OL);
+  olLine(15*s,18*s,20*s+lKick,42*s,8*s,'#7a6050',OL);
+  olCircle(20*s+lKick,44*s,5*s,'#5a4030',OL);
+  // FRONT LEGS
+  olLine(-22*s,5*s,-28*s+lKick,32*s,7*s,'#8a7060',OL);
+  olCircle(-28*s+lKick,34*s,5*s,'#5a4030',OL);
+  olLine(22*s,5*s,28*s-lKick,32*s,7*s,'#8a7060',OL);
+  olCircle(28*s-lKick,34*s,5*s,'#5a4030',OL);
+  // Claws
+  ctx.strokeStyle='#ddd';ctx.lineWidth=1.5*s;ctx.lineCap='round';
+  for(var ci=-1;ci<=1;ci++){
+    ctx.beginPath();ctx.moveTo(-28*s+lKick+ci*2.5*s,36*s);ctx.lineTo(-28*s+lKick+ci*3.5*s,40*s);ctx.stroke();
+    ctx.beginPath();ctx.moveTo(28*s-lKick+ci*2.5*s,36*s);ctx.lineTo(28*s-lKick+ci*3.5*s,40*s);ctx.stroke();
+  }
+
+  // BODY
+  olShape(function(){ctx.beginPath();ctx.ellipse(0,8*s,28*s*breathe,22*s*breathe,0,0,Math.PI*2);},'#6a5545',OL);
+  ctx.fillStyle='#9a8a70';ctx.globalAlpha=0.45;ctx.beginPath();ctx.ellipse(2*s,12*s,16*s,12*s,0,0,Math.PI*2);ctx.fill();ctx.globalAlpha=1;
+  // Spine
+  ctx.fillStyle='#4a3a2a';
+  for(var si=0;si<5;si++){var sx=-10*s+si*5*s,sH=(5+Math.sin(si*2+t/250)*2)*s;ctx.beginPath();ctx.moveTo(sx-2*s,-10*s);ctx.lineTo(sx,-10*s-sH);ctx.lineTo(sx+2*s,-10*s);ctx.closePath();ctx.fill();}
+
+  // FISTS
+  var fSw=(anim==='attack')?atkSw*15*s:0;
+  olLine(-24*s,0,-34*s-fSw,-8*s+Math.abs(fSw)*0.3,7*s,'#8a7060',OL);
+  olCircle(-35*s-fSw,-10*s,7*s,'#8a7060',OL);
+  olLine(24*s,0,34*s+fSw,-8*s+Math.abs(fSw)*0.3,7*s,'#8a7060',OL);
+  olCircle(35*s+fSw,-10*s,7*s,'#8a7060',OL);
+  // Attack claws
+  if(anim==='attack'&&atkSw>0.3){
+    ctx.strokeStyle='#fff';ctx.lineWidth=2*s;
+    for(var ci=-1;ci<=1;ci++){
+      ctx.beginPath();ctx.moveTo(-38*s-fSw,-10*s+ci*4*s);ctx.lineTo(-44*s-fSw,-12*s+ci*6*s);ctx.stroke();
+      ctx.beginPath();ctx.moveTo(38*s+fSw,-10*s+ci*4*s);ctx.lineTo(44*s+fSw,-12*s+ci*6*s);ctx.stroke();
+    }
+    ctx.globalAlpha=0.6;ctx.strokeStyle='#ff4422';ctx.lineWidth=2.5*s;
+    for(var sl=-1;sl<=1;sl++){ctx.beginPath();ctx.moveTo(-38*s-fSw*0.5,-10*s+sl*8*s);ctx.lineTo(-48*s-fSw,-14*s+sl*12*s);ctx.stroke();}
+    ctx.globalAlpha=1;
+  }
+
+  // HEAD
+  var hR=32*s, hY=-28*s+((anim==='walk')?Math.sin(t/140)*2*s:(anim==='attack'?atkSw*3*s:0));
+  olCircle(0,hY,hR,'#6a5545',OL);
+
+  // Mane spikes
+  ctx.fillStyle='#3a2a1a';
+  for(var mi=0;mi<10;mi++){var mA=(mi/10)*Math.PI*2-Math.PI/2,sL=hR*0.35+Math.sin(mi*3+t/200)*3*s;
+    ctx.beginPath();ctx.moveTo(Math.cos(mA-0.25)*hR*0.75,hY+Math.sin(mA-0.25)*hR*0.75);ctx.lineTo(Math.cos(mA)*(hR+sL),hY+Math.sin(mA)*(hR+sL));ctx.lineTo(Math.cos(mA+0.25)*hR*0.75,hY+Math.sin(mA+0.25)*hR*0.75);ctx.closePath();ctx.fill();
+  }
+
+  // Snout
+  olShape(function(){ctx.beginPath();ctx.ellipse(0,hY+12*s,14*s,10*s,0,0,Math.PI*2);},'#7a6a55',OL);
+  ctx.fillStyle='#1a0a05';ctx.beginPath();ctx.ellipse(0,hY+6*s,5*s,3.5*s,0,0,Math.PI*2);ctx.fill();
+
+  // Mouth + fangs
+  ctx.fillStyle='#1a0505';ctx.beginPath();ctx.moveTo(-12*s,hY+14*s);ctx.quadraticCurveTo(0,hY+26*s,12*s,hY+14*s);ctx.closePath();ctx.fill();
+  ctx.fillStyle='#8B2020';ctx.beginPath();ctx.ellipse(0,hY+18*s,7*s,4*s,0,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle='#fff';
+  for(var ti=-2;ti<=2;ti++){ctx.beginPath();ctx.moveTo(ti*4.5*s-2*s,hY+14*s);ctx.lineTo(ti*4.5*s,hY+18*s);ctx.lineTo(ti*4.5*s+2*s,hY+14*s);ctx.closePath();ctx.fill();}
+  ctx.beginPath();ctx.moveTo(-10*s,hY+13*s);ctx.lineTo(-8*s,hY+22*s);ctx.lineTo(-6*s,hY+13*s);ctx.closePath();ctx.fill();
+  ctx.beginPath();ctx.moveTo(10*s,hY+13*s);ctx.lineTo(8*s,hY+22*s);ctx.lineTo(6*s,hY+13*s);ctx.closePath();ctx.fill();
+
+  // EYES
+  ctx.fillStyle='#1a1008';ctx.beginPath();ctx.ellipse(-12*s,hY-4*s,9*s,7*s,-0.15,0,Math.PI*2);ctx.fill();
+  ctx.beginPath();ctx.ellipse(12*s,hY-4*s,9*s,7*s,0.15,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle='#ffee33';ctx.beginPath();ctx.ellipse(-12*s,hY-4*s,7*s,5.5*s,-0.15,0,Math.PI*2);ctx.fill();
+  ctx.beginPath();ctx.ellipse(12*s,hY-4*s,7*s,5.5*s,0.15,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle='#0a0000';ctx.beginPath();ctx.ellipse(-11*s,hY-4*s,2*s,4.5*s,0,0,Math.PI*2);ctx.fill();
+  ctx.beginPath();ctx.ellipse(11*s,hY-4*s,2*s,4.5*s,0,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(-14*s,hY-6*s,2*s,0,Math.PI*2);ctx.fill();
+  ctx.beginPath();ctx.arc(10*s,hY-6*s,2*s,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle='rgba(255,220,0,0.12)';ctx.beginPath();ctx.arc(-12*s,hY-4*s,12*s,0,Math.PI*2);ctx.fill();
+  ctx.beginPath();ctx.arc(12*s,hY-4*s,12*s,0,Math.PI*2);ctx.fill();
+  // Brows
+  ctx.strokeStyle='#1a1008';ctx.lineWidth=4*s;ctx.lineCap='round';
+  ctx.beginPath();ctx.moveTo(-20*s,hY-14*s);ctx.lineTo(-6*s,hY-9*s);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(20*s,hY-14*s);ctx.lineTo(6*s,hY-9*s);ctx.stroke();
+
+  // EARS
+  olShape(function(){ctx.beginPath();ctx.moveTo(-18*s,hY-18*s);ctx.lineTo(-24*s,hY-42*s);ctx.lineTo(-8*s,hY-22*s);ctx.closePath();},'#6a5545',OL);
+  ctx.fillStyle='#aa8870';ctx.beginPath();ctx.moveTo(-17*s,hY-20*s);ctx.lineTo(-22*s,hY-36*s);ctx.lineTo(-10*s,hY-22*s);ctx.closePath();ctx.fill();
+  olShape(function(){ctx.beginPath();ctx.moveTo(18*s,hY-18*s);ctx.lineTo(24*s,hY-42*s);ctx.lineTo(8*s,hY-22*s);ctx.closePath();},'#6a5545',OL);
+  ctx.fillStyle='#aa8870';ctx.beginPath();ctx.moveTo(17*s,hY-20*s);ctx.lineTo(22*s,hY-36*s);ctx.lineTo(10*s,hY-22*s);ctx.closePath();ctx.fill();
+
+  // Defense
+  if(anim==='defend'){ctx.strokeStyle='rgba(255,220,0,0.6)';ctx.lineWidth=4*s;ctx.beginPath();ctx.arc(0,5*s,50*s,0,Math.PI*2);ctx.stroke();}
+
+  ctx.restore();
+}
+
+// ============ LOOP ============
+var lastT = 0;
+function loop(t) {
+  var dt = t - lastT; lastT = t;
+  ctx.fillStyle = '#2a2a3e';
+  ctx.fillRect(0, 0, 800, 480);
+
+  // Ground shadows
+  ctx.fillStyle = 'rgba(0,0,0,0.3)';
+  ctx.beginPath(); ctx.ellipse(200, 400, 80, 18, 0, 0, Math.PI * 2); ctx.fill();
+  ctx.beginPath(); ctx.ellipse(600, 410, 90, 20, 0, 0, Math.PI * 2); ctx.fill();
+
+  // Labels
+  ctx.font = 'bold 20px sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillStyle = '#e8c840'; ctx.fillText('角鬥士', 200, 30);
+  ctx.fillStyle = '#cc6622'; ctx.fillText('猛獸', 600, 30);
+
+  ctx.font = '14px sans-serif';
+  ctx.fillStyle = '#666';
+  ctx.fillText('動作: ' + ({idle:'待機',walk:'行走',attack:'攻擊',defend:'防禦'}[anim] || anim), 400, 470);
+
+  // Draw characters
+  drawGladiator(200, 280, 80, t);
+  drawBeast(600, 280, 90, t);
+
+  // Divider
+  ctx.strokeStyle = '#333'; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(400, 50); ctx.lineTo(400, 440); ctx.stroke();
+
+  requestAnimationFrame(loop);
+}
+requestAnimationFrame(loop);
+</script>
+</body>
+</html>
