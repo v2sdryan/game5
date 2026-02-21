@@ -369,12 +369,15 @@ function calcUI() {
 
   var wr = Math.max(18, 22 * S);
   var wy = Math.max(45, 55 * S);
+  var pauseR = Math.max(16, 20 * S);
+  ui.pause = { x: W - 28 * S, y: 28 * S, r: pauseR, label: '||' };
+  var wpnGap = Math.max(wr * 2 + 6, 48 * S);
+  var wpn2X = W - Math.max(wr + pauseR + 36, 64 * S);
   ui.wpn = [
-    { x: W - 160 * S, y: wy, r: wr, idx: 0 },
-    { x: W - 112 * S, y: wy, r: wr, idx: 1 },
-    { x: W - 64 * S,  y: wy, r: wr, idx: 2 }
+    { x: wpn2X - wpnGap * 2, y: wy, r: wr, idx: 0 },
+    { x: wpn2X - wpnGap, y: wy, r: wr, idx: 1 },
+    { x: wpn2X,  y: wy, r: wr, idx: 2 }
   ];
-  ui.pause = { x: W - 28 * S, y: 28 * S, r: Math.max(16, 20 * S), label: '||' };
   var mbR = Math.max(24, 30 * S);
   ui.menu = { x: mbR + 12 * S, y: H - mbR - 12 * S, r: mbR };
   ui.music = { x: mbR + 12 * S, y: H - mbR * 3.2 - 12 * S, r: mbR };
